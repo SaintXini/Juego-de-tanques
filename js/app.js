@@ -116,9 +116,53 @@ const animar = () => {
   pintar();
 };
 const verificar = () => {};
+
+
+
+
 const pintar = () => {
   game.tanque.dibujar();
+  mensaje(String(game.radianes),0, 450);
+
+
+
 };
+
+const ajustar = (xx, yy) => {
+
+  const pos = game.canvas.getBoundingClientRect();
+  const x = xx - pos.left;
+  const y = yy - pos.top;
+  return {x, y}
+
+}
+
+const mensaje = (cadena, x, y) => {
+  let medio = (game.canvas.width-x)/2;
+  game.ctx.save();
+  game.ctx.fillStyle = "black";
+  game.ctx.strokeStyle = "black";
+  game.ctx.textBaseline = "top";
+  game.ctx.font = "bold 20px Courier";
+  game.ctx.texAling = "center";
+  game.ctx.clearRect(x,y,game.canvas.width,game.canvas.height);
+  game.ctx.fillText(cadena, x+medio, y);
+
+}
+
+/***************************
+ LISTENER USO DEL EVENTENTO ARA EL MOUSE
+ */
+document.addEventListener("mousemove", function(e){
+
+  var { x, y} = ajustar(e.clientX, e.clientY);
+  var dx = x - game.centroX;
+  var dy = y - game.centroY;
+  game.radianes = Math.atan2(dy, dx);
+
+});
+
+
 /***********
 INICIO
 ************/
