@@ -45,8 +45,18 @@ function Bala(x, y, radianes) {
   this.w = 5;
   this.velocidad = 8;
   this.radianes = radianes;
-  this.dibujar = function () {};
+  this.dibujar = function () {
+    game.ctx.save();
+    game.ctx.fillStyle = game.colorBala;
+    this.x += Math.cos(this.radianes) * this.velocidad;
+    this.y += Math.sin(this.radianes) * this.velocidad;
+    game.ctx.fillRect(this.x, this.y, this.w, this.w);
+    game.ctx.restore();
+    
+  };
 }
+
+
 function Tanque(x, y, radio) {
   this.x = x;
   this.y = y;
@@ -94,11 +104,15 @@ const caratula = () => {
     game.ctx.drawImage(imagen, 0, 0, 700, 500);
   };
 };
+
+
 const seleccionar = (e) => {
   if (game.caratula) {
     inicio();
   }
 };
+
+
 const inicio = () => {
   game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
   game.caratula = false;
@@ -121,6 +135,7 @@ const inicio = () => {
   game.tanque.dibujar();
   animar();
 };
+
 const animar = () => {
   requestAnimationFrame(animar);
   verificar();
@@ -128,13 +143,31 @@ const animar = () => {
 };
 
 
-const verificar = () => {};
+const verificar = () => {
+  if (game.tecla_array[BARRA]){
+    game.balas_array.push(
+      new Bala(
+        game.centroX + Math.cos(game.radianes)*35,
+        game.centroY + Math.sin(game.radianes)*35,
+        game.radianes
+      )
+    );
+    game.tecla_array[BARRA] = false;
+    sonidos.disparo.play();
+
+  }
+
+
+};
 
 
 
 const pintar = () => {
   //game.tanque.dibujar();
   //mensaje(String(game.radianes),0, 450);
+
+
+  // Configuración para que el tanque apunte a donde se encuentra el mouse 
   game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
   game.ctx.save();
   game.ctx.translate(game.centroX, game.centroY);
@@ -146,7 +179,23 @@ const pintar = () => {
   -game.imagen.height / 2
 );
   game.ctx.restore();
+
+  for (let i = 0; i < game.balas_array.length; i++){
+  if(game.balas_array[i] != null){
+    game.balas_array[i].dibujar();
+
+    if(game.balas_array[i].x < 0
+        || game.balas_array[i].x > game.w
+        || game.balas_array[i].y < 0
+        || game.balas_array[i].y > game.h
+    ){
+      game.balas_array[i] = null;
+    }
+  }
+}
 };
+
+
 
 
 
@@ -184,6 +233,13 @@ window.requestAnimationFrame = (function () {
     }
   );
 })();
+
+document.addEventListener("keydown", function(e){
+  game.teclaPulsada = e.keyCode;
+  game.tecla_array[game.teclaPulsada] = true;
+});
+
+
 window.onload = function () {
   game.canvas = document.getElementById("canvas");
   if (game.canvas && game.canvas.getContext) {
