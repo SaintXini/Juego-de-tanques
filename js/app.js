@@ -192,8 +192,22 @@ const colisiones = () =>{
           sonidos.boing.play();
         }
       }
-    })
+    });
+
+    if(enemigo != null) {
+      if(enemigo.n > 95){
+        game.enemigos_array[i]  = null;
+        game.vidas--;
+        sonidos.boom.play();
+        if(game.vidas <= 0) gameOver();
+      }
+    }
+
   });
+}
+
+const gameOver = () => {
+  alert("fin del juego")
 }
 
 
