@@ -52,10 +52,8 @@ function Bala(x, y, radianes) {
     this.y += Math.sin(this.radianes) * this.velocidad;
     game.ctx.fillRect(this.x, this.y, this.w, this.w);
     game.ctx.restore();
-    
   };
 }
-
 
 function Tanque(x, y, radio) {
   this.x = x;
@@ -85,12 +83,25 @@ function Enemigo(x, y) {
   this.inicioY = y;
   this.estado = 1;
   this.r = 10;
-  this.w = r * 2;
+  this.w = this.r * 2;
   this.vive = true;
   this.velocidad = 0.3 + Math.random();
   this.color =
     game.colorEnemigo[Math.floor(Math.random() * game.colorEnemigo.length)];
-  this.dibujar = function () {};
+  this.dibujar = function () {
+    if (this.n < 100 && this.vive) {
+      game.ctx.save();
+      game.ctx.beginPath();
+      game.ctx.fillStyle = this.color;
+      game.ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+      game.ctx.fill();
+      this.n += this.velocidad;
+      this.x = game.centroX * (this.n / 100) + this.inicioX * ((100 - this.n) / 100);
+
+      this.y = game.centroY * (this.n / 100) + this.inicioY * ((100 - this.n) / 100);
+      game.ctx.restore();
+    }
+  };
 }
 
 /***********
@@ -105,13 +116,11 @@ const caratula = () => {
   };
 };
 
-
 const seleccionar = (e) => {
   if (game.caratula) {
     inicio();
   }
 };
-
 
 const inicio = () => {
   game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
@@ -133,7 +142,31 @@ const inicio = () => {
   });
 
   game.tanque.dibujar();
+
+  setTimeout(lanzaEnemigo, 1000);
   animar();
+};
+
+const lanzaEnemigo = () => {
+  let lado = Math.floor(Math.random() * 4) + 1;
+  let x, y;
+
+  if (lado == 1) {
+    x = -10;
+    y = Math.floor(Math.random() * game.h);
+  } else if (lado == 2) {
+    x = Math.floor(Math.random() * game.w);
+    y = -10;
+  } else if (lado == 3) {
+    x = game.w + Math.random() * 10;
+    y = Math.floor(Math.random() * game.h);
+  } else if (lado == 4) {
+    x = Math.floor(Math.random() * game.w);
+    y = game.h + Math.random() * 10;
+  }
+
+  game.enemigos_array.push(new Enemigo(x, y));
+  setTimeout(lanzaEnemigo, 2000);
 };
 
 const animar = () => {
@@ -142,62 +175,58 @@ const animar = () => {
   pintar();
 };
 
-
 const verificar = () => {
-  if (game.tecla_array[BARRA]){
+  if (game.tecla_array[BARRA]) {
     game.balas_array.push(
       new Bala(
-        game.centroX + Math.cos(game.radianes)*35,
-        game.centroY + Math.sin(game.radianes)*35,
-        game.radianes
-      )
+        game.centroX + Math.cos(game.radianes) * 35,
+        game.centroY + Math.sin(game.radianes) * 35,
+        game.radianes,
+      ),
     );
     game.tecla_array[BARRA] = false;
     sonidos.disparo.play();
-
   }
-
-
 };
-
-
 
 const pintar = () => {
   //game.tanque.dibujar();
   //mensaje(String(game.radianes),0, 450);
 
-
-  // Configuración para que el tanque apunte a donde se encuentra el mouse 
+  // Configuración para que el tanque apunte a donde se encuentra el mouse
   game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
   game.ctx.save();
   game.ctx.translate(game.centroX, game.centroY);
   game.ctx.scale(game.tanque.escala, game.tanque.escala);
   game.ctx.rotate(game.radianes);
   game.ctx.drawImage(
-  game.imagen,
-  -game.imagen.width / 2,
-  -game.imagen.height / 2
-);
+    game.imagen,
+    -game.imagen.width / 2,
+    -game.imagen.height / 2,
+  );
   game.ctx.restore();
 
-  for (let i = 0; i < game.balas_array.length; i++){
-  if(game.balas_array[i] != null){
-    game.balas_array[i].dibujar();
+  for (let i = 0; i < game.balas_array.length; i++) {
+    if (game.balas_array[i] != null) {
+      game.balas_array[i].dibujar();
 
-    if(game.balas_array[i].x < 0
-        || game.balas_array[i].x > game.w
-        || game.balas_array[i].y < 0
-        || game.balas_array[i].y > game.h
-    ){
-      game.balas_array[i] = null;
+      if (
+        game.balas_array[i].x < 0 ||
+        game.balas_array[i].x > game.w ||
+        game.balas_array[i].y < 0 ||
+        game.balas_array[i].y > game.h
+      ) {
+        game.balas_array[i] = null;
+      }
     }
   }
-}
+
+  game.enemigos_array.map((enemigo, i) => {
+    if (enemigo != null) {
+      enemigo.dibujar();
+    }
+  });
 };
-
-
-
-
 
 const ajustar = (xx, yy) => {
   const pos = game.canvas.getBoundingClientRect();
@@ -234,11 +263,10 @@ window.requestAnimationFrame = (function () {
   );
 })();
 
-document.addEventListener("keydown", function(e){
+document.addEventListener("keydown", function (e) {
   game.teclaPulsada = e.keyCode;
   game.tecla_array[game.teclaPulsada] = true;
 });
-
 
 window.onload = function () {
   game.canvas = document.getElementById("canvas");
