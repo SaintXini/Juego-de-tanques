@@ -173,7 +173,29 @@ const animar = () => {
   requestAnimationFrame(animar);
   verificar();
   pintar();
+  colisiones();
 };
+
+const colisiones = () =>{
+  game.enemigos_array.map((enemigo, i) => {
+    game.balas_array.map((bala, j) => {
+
+      if(enemigo != null && bala != null){
+        
+        if((bala.x > enemigo.x) &&
+        (bala.x < enemigo.x+enemigo.w) &&
+        (bala.y>enemigo.y) &&
+        (bala.y<enemigo.y+enemigo.w)){
+          game.enemigos_array[i] = null;
+          game.balas_array[j] = null;
+          game.puntos *= 10;
+          sonidos.boing.play();
+        }
+      }
+    })
+  });
+}
+
 
 const verificar = () => {
   if (game.tecla_array[BARRA]) {
