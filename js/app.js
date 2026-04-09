@@ -21,6 +21,7 @@ game = {
   h: 0,
   puntos: 0,
   vidas: 3,
+  balas: 200,
   finJuego: false,
 };
 
@@ -96,9 +97,11 @@ function Enemigo(x, y) {
       game.ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
       game.ctx.fill();
       this.n += this.velocidad;
-      this.x = game.centroX * (this.n / 100) + this.inicioX * ((100 - this.n) / 100);
+      this.x =
+        game.centroX * (this.n / 100) + this.inicioX * ((100 - this.n) / 100);
 
-      this.y = game.centroY * (this.n / 100) + this.inicioY * ((100 - this.n) / 100);
+      this.y =
+        game.centroY * (this.n / 100) + this.inicioY * ((100 - this.n) / 100);
       game.ctx.restore();
     }
   };
@@ -123,7 +126,8 @@ const seleccionar = (e) => {
 };
 
 const inicio = () => {
-  game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+  //game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+  limpiarCanvas();
   game.caratula = false;
   //sonidos.boom.play();
   //sonidos.disparo.play();
@@ -171,57 +175,65 @@ const lanzaEnemigo = () => {
 
 const animar = () => {
   requestAnimationFrame(animar);
+
+  if (game.finJuego) return; // 🔥 ahora solo pausa lógica, no el loop
+
   verificar();
   pintar();
   colisiones();
 };
 
-const colisiones = () =>{
+const colisiones = () => {
   game.enemigos_array.map((enemigo, i) => {
     game.balas_array.map((bala, j) => {
-
-      if(enemigo != null && bala != null){
-        
-        if((bala.x > enemigo.x) &&
-        (bala.x < enemigo.x+enemigo.w) &&
-        (bala.y>enemigo.y) &&
-        (bala.y<enemigo.y+enemigo.w)){
+      if (enemigo != null && bala != null) {
+        if (
+          bala.x > enemigo.x &&
+          bala.x < enemigo.x + enemigo.w &&
+          bala.y > enemigo.y &&
+          bala.y < enemigo.y + enemigo.w
+        ) {
           game.enemigos_array[i] = null;
           game.balas_array[j] = null;
-          game.puntos *= 10;
+          game.puntos += 10;
           sonidos.boing.play();
         }
       }
     });
 
-    if(enemigo != null) {
-      if(enemigo.n > 95){
-        game.enemigos_array[i]  = null;
+    if (enemigo != null) {
+      if (enemigo.n > 95) {
+        game.enemigos_array[i] = null;
         game.vidas--;
         sonidos.boom.play();
-        if(game.vidas <= 0) gameOver();
+        if (game.vidas <= 0) gameOver();
       }
     }
-
   });
-}
+};
 
 const gameOver = () => {
-  alert("fin del juego")
-}
-
+  limpiarCanvas();
+  mensaje("Fin del juego", 0, 150, "bold 100px Arial", "black");
+  mensaje(`Obtuviste ${game.puntos} puntos`,0 ,300, "bold 40px Arial", "black" );
+  game.finJuego = true;
+  sonidos.fin.play();
+};
 
 const verificar = () => {
   if (game.tecla_array[BARRA]) {
-    game.balas_array.push(
-      new Bala(
-        game.centroX + Math.cos(game.radianes) * 35,
-        game.centroY + Math.sin(game.radianes) * 35,
-        game.radianes,
-      ),
-    );
-    game.tecla_array[BARRA] = false;
-    sonidos.disparo.play();
+    if (game.balas > 0) {
+      game.balas_array.push(
+        new Bala(
+          game.centroX + Math.cos(game.radianes) * 35,
+          game.centroY + Math.sin(game.radianes) * 35,
+          game.radianes,
+        ),
+      );
+      game.balas--;
+      game.tecla_array[BARRA] = false;
+      sonidos.disparo.play();
+    }
   }
 };
 
@@ -230,7 +242,9 @@ const pintar = () => {
   //mensaje(String(game.radianes),0, 450);
 
   // Configuración para que el tanque apunte a donde se encuentra el mouse
-  game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+  //game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+  limpiarCanvas();
+  marcador();
   game.ctx.save();
   game.ctx.translate(game.centroX, game.centroY);
   game.ctx.scale(game.tanque.escala, game.tanque.escala);
@@ -271,18 +285,42 @@ const ajustar = (xx, yy) => {
   return { x, y };
 };
 
-const mensaje = (cadena, x, y) => {
+const mensaje = (
+  cadena,
+  x,
+  y,
+  fuentes = "bold 20px Courier",
+  color = "black",
+) => {
   let medio = (game.canvas.width - x) / 2;
   game.ctx.save();
   game.ctx.fillStyle = "black";
   game.ctx.strokeStyle = "black";
   game.ctx.textBaseline = "top";
   game.ctx.font = "bold 20px Courier";
-  game.ctx.texAling = "center";
+  game.ctx.textAlign = "center";
   game.ctx.clearRect(x, y, game.canvas.width, game.canvas.height);
   game.ctx.fillText(cadena, x + medio, y);
 
   game.ctx.restore();
+};
+
+const marcador = () => {
+  /*game.ctx.save();
+  game.ctx.fillStyle = "white";
+  game.ctx.clearRect(0, 0, game.canvas.width, 40);
+  game.ctx.font = "bold 20px Courier";
+  game.ctx.fillText(
+    `SCORE: ${game.puntos} VIDAS: ${game.vidas} BALAS: ${game.balas}`,10,20
+  );
+
+  game.ctx.restore(); */
+  let m = `SCORE: ${game.puntos} VIDAS: ${game.vidas} BALAS: ${game.balas}`;
+  mensaje(m, 0, 10, "bold 20px Courier", "black");
+};
+
+const limpiarCanvas = () => {
+  game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
 };
 
 /***********
